@@ -191,12 +191,23 @@ def open_all_accounts_with_cookies_and_follow(target_username):
         thread.join()
 
 if __name__ == "__main__":
-    import time
-    start_time = time.time()
-    target_username = "Canyildiz1386"
-    open_all_accounts_with_cookies_and_follow(target_username)
-    end_time = time.time()
-    print(end_time - start_time)
+    # login_process = InstagramLoginProcess()
+    # login_process.open_instagram()
+    # # login_process.check_all_cookies()
+    
+    # username = "sedna_salarii77"
+    # password = "bahar1378##"
+    # login_process.login(username, password)
+    
+    # if login_process.check_text("home"):
+    #     console.print("[green]:cookie: Logged in with cookies.[/green]")
+    # else:
+    #     console.print("[red]:x: Login failed or cookies not found.[/red]")
+    
+    # actions = InstagramActions(login_process.driver)
+    # target_username = "Canyildiz1386"
+    # actions.follow(target_username)
+    
 
     
     
