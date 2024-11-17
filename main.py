@@ -190,7 +190,7 @@ def open_all_accounts_with_cookies_and_follow(target_username):
     for thread in threads:
         thread.join()
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
     # login_process = InstagramLoginProcess()
     # login_process.open_instagram()
     # # login_process.check_all_cookies()
@@ -207,6 +207,9 @@ if __name__ == "__main__":
     # actions = InstagramActions(login_process.driver)
     # target_username = "Canyildiz1386"
     # actions.follow(target_username)
+
+    # target_username = "Canyildiz1386"
+    # open_all_accounts_with_cookies_and_follow(target_username)
     
 
     
