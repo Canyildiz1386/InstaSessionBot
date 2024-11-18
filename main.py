@@ -55,6 +55,7 @@ class InstagramLoginProcess:
                     self.driver.add_cookie(cookie)
             console.print("[green]:white_check_mark: Cookies loaded from file.[/green]")
             time.sleep(5)
+            self.driver.refresh()
             return True
         console.print("[yellow]:warning: No cookie file found; proceeding with login.[/yellow]")
         return False
@@ -80,7 +81,8 @@ class InstagramLoginProcess:
 
     def handle_two_factor_auth(self):
         try:
-            WebDriverWait(self.driver, 10).until(
+            
+            WebDriverWait(self.driver, 40).until(
                 EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "Enter the code we sent to")
             )
             console.print("[yellow]:mailbox: Code sent to your email. Please enter the code below.[/yellow]")
@@ -90,7 +92,7 @@ class InstagramLoginProcess:
             )
             code_field.send_keys(code)
             code_field.send_keys(Keys.RETURN)
-            time.sleep(5)
+            time.sleep(30)
             console.print("[green]:white_check_mark: Code entered, attempting login...[/green]")
         except TimeoutException:
             console.print("[yellow]:warning: No two-factor authentication prompt appeared; proceeding without it.[/yellow]")
@@ -190,14 +192,14 @@ def open_all_accounts_with_cookies_and_follow(target_username):
     for thread in threads:
         thread.join()
 
-# if __name__ == "__main__":
-    # login_process = InstagramLoginProcess()
-    # login_process.open_instagram()
-    # # login_process.check_all_cookies()
+if __name__ == "__main__":
+    login_process = InstagramLoginProcess()
+    login_process.open_instagram()
+    # login_process.check_all_cookies()
     
-    # username = "sedna_salarii77"
-    # password = "bahar1378##"
-    # login_process.login(username, password)
+    username = "delniya_khavaran78"
+    password = "bahar1378##"
+    login_process.login(username, password)
     
     # if login_process.check_text("home"):
     #     console.print("[green]:cookie: Logged in with cookies.[/green]")
