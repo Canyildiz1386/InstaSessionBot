@@ -26,10 +26,11 @@ class InstagramLoginProcess:
         self.cookies_dir = "cookies"
         self.create_cookies_folder()
 
+
     def open_instagram(self):
         console.print(":globe_with_meridians: [bold cyan]Opening Instagram...[/bold cyan]")
         self.driver.get("https://www.instagram.com")
-        time.sleep(5)
+
         self.check_and_accept_cookies()
 
     def check_and_accept_cookies(self):
@@ -38,7 +39,6 @@ class InstagramLoginProcess:
             cookies_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_a9-- _ap36 _a9_0')]")
             cookies_button.click()
             console.print("[green]:white_check_mark: Accepted cookies.[/green]")
-            time.sleep(2)
         else:
             console.print("[yellow]:warning: 'Allow All Cookies' button not found.[/yellow]")
 
@@ -54,8 +54,10 @@ class InstagramLoginProcess:
                 for cookie in pickle.load(file):
                     self.driver.add_cookie(cookie)
             console.print("[green]:white_check_mark: Cookies loaded from file.[/green]")
-            time.sleep(5)
             self.driver.refresh()
+            time.sleep(5)
+
+            self.suspect_automated_behavior()
             return True
         console.print("[yellow]:warning: No cookie file found; proceeding with login.[/yellow]")
         return False
@@ -76,9 +78,27 @@ class InstagramLoginProcess:
             username_field.send_keys(Keys.RETURN)
             console.print(":hourglass_flowing_sand: [bold cyan]Waiting for the verification prompt or home page to load...[/bold cyan]")
             self.handle_two_factor_auth()
+            self.handle_two_factor_auth_2()
+            self.suspect_automated_behavior()
             self.wait_for_home_page()
             self.save_cookies(username)
 
+    def suspect_automated_behavior(self):
+        try:
+            if WebDriverWait(self.driver, 20).until(EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "We suspect automated behavior on your account")):
+                console.print("[yellow]:warning: Automated behavior suspected. Clicking 'Dismiss'.[/yellow]")
+                dismiss_button = WebDriverWait(self.driver, 20).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[@aria-label='Dismiss' and @role='button']"))
+                )
+                dismiss_button.click()
+                console.print("[green]:white_check_mark: 'Dismiss' button clicked successfully.[/green]")
+            
+            # time.sleep(10)
+            console.print("[green]:white_check_mark: Code entered, attempting login...[/green]")
+            
+        except TimeoutException:
+            console.print("[yellow]:warning: No two-factor authentication prompt appeared; proceeding without it.[/yellow]")
+       
     def handle_two_factor_auth(self):
         try:
             
@@ -92,6 +112,32 @@ class InstagramLoginProcess:
             )
             code_field.send_keys(code)
             code_field.send_keys(Keys.RETURN)
+            time.sleep(30)
+            console.print("[green]:white_check_mark: Code entered, attempting login...[/green]")
+        except TimeoutException:
+            console.print("[yellow]:warning: No two-factor authentication prompt appeared; proceeding without it.[/yellow]")
+
+    def handle_two_factor_auth_2(self):
+        try:
+            WebDriverWait(self.driver, 40).until(
+                EC.text_to_be_present_in_element((By.TAG_NAME, "body"), "We Detected An Unusual Login Attempt")
+            )
+            console.print("[cyan]:hourglass: Waiting for 'Continue' button...[/cyan]")
+            continue_button = WebDriverWait(self.driver, 20).until(
+                EC.presence_of_element_located((By.XPATH, "//div[text()='Continue']"))
+            )
+            continue_button.click()
+            console.print("[green]:white_check_mark: Clicked 'Continue' button successfully.[/green]")
+            
+            console.print("[yellow]:mailbox: Code sent to your email. Please enter the code below.[/yellow]")
+            code = input("Enter the code received by email: ")
+            code_field = WebDriverWait(self.driver, 20).until(
+                EC.presence_of_element_located((By.NAME, "security_code"))
+            )
+            code_field.send_keys(code)
+            code_field.send_keys(Keys.RETURN)
+            
+            
             time.sleep(30)
             console.print("[green]:white_check_mark: Code entered, attempting login...[/green]")
         except TimeoutException:
@@ -140,28 +186,71 @@ class InstagramLoginProcess:
         self.driver.quit()
         console.print(":wave: [bold blue]Closed browser and ended session.[/bold blue]")
 
+
 class InstagramActions:
     def __init__(self, driver):
         self.driver = driver
 
-    def follow(self, target_username):
+    def follow(self, target_username, retries=5):
+        
         console.print(f":mag_right: [bold cyan]Navigating to {target_username}'s profile to follow...[/bold cyan]")
-        self.driver.get(f"https://www.instagram.com/{target_username}/")
+
+
+        attempt = 0
+        while attempt < retries:
+            try:
+                self.driver.get(f"https://www.instagram.com/{target_username}/")
+                time.sleep(5)
+                
+                follow_button = self.driver.find_element(By.XPATH, "//button[contains(@class, '_acan') and .//div[contains(text(), 'Follow')]]")
+                follow_button.click()
+                time.sleep(20)
+                console.print(f"[green]:white_check_mark: Clicked 'Follow' button for {target_username}.[/green]")
+
+                
+                console.print(f"[green]:white_check_mark: Now following {target_username} successfully.[/green]")
+                return 
+
+            except (TimeoutException, NoSuchElementException) as e:
+                attempt += 1
+                
+                console.print(f"[yellow]:warning: Attempt {attempt}/{retries} failed. Error: {e}[/yellow]")
+                if attempt < retries:
+                    console.print("[yellow]:warning: Retrying...[/yellow]")
+                    time.sleep(3)  
+                else:
+                    console.print(f"[red]:x: Failed to follow {target_username} after {retries} attempts.[/red]")
+            except Exception as e:
+                console.print(f"[yellow]:warning: Could not follow {target_username}. Error: {e}[/yellow]")
+                break 
+    def like(self, target_post_url, retries=3):
+        console.print(f":heart: [bold cyan]Navigating to the post to like...[/bold cyan]")
+        self.driver.get(target_post_url)
         time.sleep(5)
-        try:
-            follow_button = self.driver.find_element(By.XPATH, "//button[.//div[contains(text(), 'Follow')]]")
-            follow_button.click()
-            console.print(f"[green]:white_check_mark: Clicked 'Follow' button for {target_username}.[/green]")
-            WebDriverWait(self.driver, 20).until(
-                lambda driver: "Following" in driver.page_source
-            )
-            console.print(f"[green]:white_check_mark: Now following {target_username} successfully.[/green]")
-        except TimeoutException:
-            console.print(f"[yellow]:warning: Timeout waiting for follow confirmation for {target_username}.")
-        except NoSuchElementException:
-            console.print(f"[yellow]:warning: Could not follow {target_username}. ⚠ HandleIt: No follow button found on profile page.[/yellow]")
-        except Exception as e:
-            console.print(f"[yellow]:warning: Could not follow {target_username}. Error: {e}[/yellow]")
+        
+        attempt = 0
+        while attempt < retries:
+            try:
+                like_button = self.driver.find_element(By.XPATH, "//div[contains(@class, 'x6s0dn4') and .//span//svg[@aria-label='Like']]")
+                
+                like_button.click()
+                console.print(f"[green]:white_check_mark: Liked the post at {target_post_url}.[/green]")
+
+                time.sleep(2)
+                console.print(f"[green]:white_check_mark: Successfully liked the post at {target_post_url}.[/green]")
+                return 
+
+            except (TimeoutException, NoSuchElementException) as e:
+                attempt += 1
+                console.print(f"[yellow]:warning: Attempt {attempt}/{retries} failed. Error: {e}[/yellow]")
+                if attempt < retries:
+                    console.print("[yellow]:warning: Retrying...[/yellow]")
+                    time.sleep(3)  
+                else:
+                    console.print(f"[red]:x: Failed to like the post after {retries} attempts.[/red]")
+            except Exception as e:
+                console.print(f"[yellow]:warning: Could not like post at {target_post_url}. Error: {e}[/yellow]")
+                break  
 
 
 
@@ -192,27 +281,3 @@ def open_all_accounts_with_cookies_and_follow(target_username):
     for thread in threads:
         thread.join()
 
-if __name__ == "__main__":
-    login_process = InstagramLoginProcess()
-    login_process.open_instagram()
-    # login_process.check_all_cookies()
-    
-    username = "delniya_khavaran78"
-    password = "bahar1378##"
-    login_process.login(username, password)
-    
-    # if login_process.check_text("home"):
-    #     console.print("[green]:cookie: Logged in with cookies.[/green]")
-    # else:
-    #     console.print("[red]:x: Login failed or cookies not found.[/red]")
-    
-    # actions = InstagramActions(login_process.driver)
-    # target_username = "Canyildiz1386"
-    # actions.follow(target_username)
-
-    # target_username = "Canyildiz1386"
-    # open_all_accounts_with_cookies_and_follow(target_username)
-    
-
-    
-    

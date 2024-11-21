@@ -54,6 +54,19 @@ class InstagramManager:
             thread.join()
         console.print(f"[green]:white_check_mark: Follow action completed for {target_username}.[/green]")
 
+    def like_all(self, target_post_url, count):
+        console.print(f"[cyan]:heart: Starting like action for {target_post_url}...[/cyan]")
+        threads = []
+        active_sessions = list(self.sessions.values())[:count]
+        for process in active_sessions:
+            actions = InstagramActions(process.driver)
+            thread = threading.Thread(target=actions.like, args=(target_post_url,))
+            threads.append(thread)
+            thread.start()
+        for thread in threads:
+            thread.join()
+        console.print(f"[green]:white_check_mark: Like action completed for {target_post_url}.[/green]")
+
     def close_all_sessions(self):
         console.print("[red]:wave: Closing all sessions...[/red]")
         for username, process in self.sessions.items():

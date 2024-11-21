@@ -6,7 +6,7 @@ console = Console()
 
 def start_cli(manager):
     console.print("[cyan]:keyboard: CLI Started. Type commands below.[/cyan]")
-    console.print("[green]Commands:[/green] [yellow]add <username> <password>[/yellow], [yellow]follow <target_username> <count>[/yellow], [yellow]exit[/yellow]")
+    console.print("[green]Commands:[/green] [yellow]add <username> <password>[/yellow], [yellow]follow <target_username> <count>[/yellow], [yellow]like <post_url> <count>[/yellow], [yellow]exit[/yellow]")
     while True:
         command = input("> ").strip()
         if command.lower() == "exit":
@@ -23,8 +23,14 @@ def start_cli(manager):
                 manager.follow_all(target_username, int(count))
             except ValueError:
                 console.print("[red]:x: Invalid command. Use: follow <target_username> <count>[/red]")
+        elif command.startswith("like"):
+            try:
+                _, post_url, count = command.split()
+                manager.like_all(post_url, int(count))
+            except ValueError:
+                console.print("[red]:x: Invalid command. Use: like <post_url> <count>[/red]")
         else:
-            console.print("[red]:x: Unknown command. Use add, follow, or exit.[/red]")
+            console.print("[red]:x: Unknown command. Use add, follow, like, or exit.[/red]")
 
 
 if __name__ == "__main__":
